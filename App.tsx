@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ViewState, UserProgress, LearningMode } from './types';
 import { LEARNING_MODULES } from './constants';
 import { ModuleViewer } from './components/ModuleViewer';
@@ -31,7 +31,8 @@ import {
   Monitor,
   Check,
   LogOut,
-  Volume2
+  Volume2,
+  ChevronRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -127,12 +128,17 @@ const App: React.FC = () => {
       return JSON.parse(saved);
     }
     return {
-      theme: 'system', // 'light', 'dark', 'system'
+      theme: 'light', // FORCE DEFAULT TO LIGHT
       language: 'id', // 'id', 'en'
       notifications: true,
       sound: true
     };
   });
+
+  // Search & Notification State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Translation Helper
   const t = (key: keyof typeof TRANSLATIONS['id']) => {
@@ -155,6 +161,31 @@ const App: React.FC = () => {
     // Save to local storage
     localStorage.setItem('stoi-settings', JSON.stringify(appSettings));
   }, [appSettings]);
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Focus Search with Cmd+K or Ctrl+K
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        if (activeView !== ViewState.MODULES) {
+            setActiveView(ViewState.MODULES);
+        }
+      }
+      // Close modals with Escape
+      if (e.key === 'Escape') {
+        setIsNotificationsOpen(false);
+        setIsSettingsOpen(false);
+        if (document.activeElement === searchInputRef.current) {
+            searchInputRef.current.blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeView]);
   
   // State to force open a specific module (for seamless navigation)
   const [targetModuleId, setTargetModuleId] = useState<string | null>(null);
@@ -270,11 +301,56 @@ const App: React.FC = () => {
     );
   };
 
+  // --- Modal Renders ---
+
+  const renderNotificationsModal = () => {
+    return (
+      <AnimatePresence>
+        {isNotificationsOpen && (
+           <>
+             {/* Transparent Backdrop */}
+             <div className="fixed inset-0 z-[60]" onClick={() => setIsNotificationsOpen(false)}></div>
+             
+             {/* Hanging Modal */}
+             <motion.div 
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="fixed top-[4.5rem] right-4 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden z-[70] border border-slate-100 dark:border-slate-700 origin-top-right"
+             >
+                <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800">
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Notifikasi</h3>
+                    <div className="flex gap-2">
+                        <span className="text-[10px] bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-300 px-2 py-0.5 rounded-full font-bold">0 Baru</span>
+                    </div>
+                </div>
+                <div className="p-6 flex flex-col items-center justify-center text-center min-h-[200px]">
+                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-3 text-slate-400 dark:text-slate-500">
+                        <Bell size={24} />
+                    </div>
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Semua Bersih!</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Belum ada notifikasi baru untukmu saat ini.
+                    </p>
+                </div>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 text-center">
+                    <button onClick={() => setIsNotificationsOpen(false)} className="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                        Tutup
+                    </button>
+                </div>
+             </motion.div>
+           </>
+        )}
+      </AnimatePresence>
+    );
+  };
+
   const renderSettingsModal = () => {
     return (
       <AnimatePresence>
         {isSettingsOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -435,6 +511,7 @@ const App: React.FC = () => {
                     learningMode={learningMode}
                     targetModuleId={targetModuleId}
                     onClearTargetModule={() => setTargetModuleId(null)}
+                    searchQuery={searchQuery}
                 />
             );
         case ViewState.ASSESSMENT:
@@ -477,7 +554,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="text-lg group-hover:text-primary-800 dark:group-hover:text-primary-300 transition-colors">StoiMaster</span>
-                  <span className="text-[10px] text-primary-400 dark:text-primary-500 font-medium tracking-wider uppercase">Learning App</span>
+                  <span className="text-xs text-primary-400 dark:text-primary-500 font-medium tracking-wider uppercase">Learning App</span>
                 </div>
             </div>
             <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
@@ -546,7 +623,7 @@ const App: React.FC = () => {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 bg-slate-50/50 dark:bg-slate-900/50 h-full relative">
-        <header className="h-16 shrink-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-8 z-20 shadow-sm/50">
+        <header className="h-16 shrink-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 md:px-8 z-20 shadow-sm/50 relative">
              <div className="flex items-center gap-3 md:gap-4">
                  <button 
                     onClick={() => setIsMobileMenuOpen(true)} 
@@ -572,14 +649,31 @@ const App: React.FC = () => {
              </div>
 
              <div className="flex items-center gap-2 md:gap-4">
-                 <div className="hidden md:flex items-center gap-2 bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all cursor-pointer group hover:shadow-inner hover:w-64 w-48 duration-300">
-                    <Search size={16} />
-                    <span className="text-xs font-medium flex-1">{t('search_placeholder')}</span>
-                    <span className="text-xs bg-white dark:bg-slate-600 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-500 text-slate-400 dark:text-slate-300 group-hover:text-slate-500">⌘K</span>
+                 <div className="relative hidden md:block w-64 group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" size={16} />
+                    <input 
+                        ref={searchInputRef}
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            if (e.target.value && activeView !== ViewState.MODULES) {
+                                setActiveView(ViewState.MODULES);
+                            }
+                        }}
+                        placeholder={t('search_placeholder')}
+                        className="w-full pl-9 pr-12 py-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-full text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-slate-800 transition-all"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-white dark:bg-slate-600 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-500 text-slate-400 dark:text-slate-300 pointer-events-none">⌘K</span>
                  </div>
                  
-                 <button className="p-2 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-full transition-colors relative group">
-                    <Bell size={20} className="group-hover:swing" />
+                 <button 
+                    onClick={() => {
+                        setIsNotificationsOpen(!isNotificationsOpen);
+                    }}
+                    className={`p-2 rounded-full transition-colors relative group ${isNotificationsOpen ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30'}`}
+                 >
+                    <Bell size={20} className={!isNotificationsOpen ? "group-hover:swing" : ""} />
                     <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
                  </button>
                  <button className="p-2 text-slate-400 dark:text-slate-500 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-full transition-colors">
@@ -619,8 +713,9 @@ const App: React.FC = () => {
         </footer>
       </div>
 
-      {/* Render Settings Modal Portal */}
+      {/* Render Modals Portal */}
       {renderSettingsModal()}
+      {renderNotificationsModal()}
     </div>
   );
 };

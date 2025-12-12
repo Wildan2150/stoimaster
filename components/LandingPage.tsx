@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, FlaskConical, Bot, BrainCircuit, GraduationCap, Sparkles, Atom, ChevronRight, Play } from 'lucide-react';
+import { ArrowRight, FlaskConical, Bot, BrainCircuit, GraduationCap, Sparkles, Atom, ChevronRight, Play, Calculator, ScrollText } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -9,10 +9,10 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 overflow-x-hidden">
+    <div className="h-full bg-slate-50 font-sans text-slate-900 overflow-y-auto overflow-x-hidden custom-scrollbar">
       
       {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-2">
@@ -25,7 +25,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             </div>
             <button 
               onClick={onStart}
-              className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-primary-600 transition-colors"
+              className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-primary-600 transition-colors shadow-lg shadow-slate-200"
             >
               Masuk Kelas
             </button>
@@ -53,32 +53,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                 </span>
-                Platform Pembelajaran Kimia Kelas 10
+                Sesuai Kurikulum Merdeka Kelas 10
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight text-slate-900 mb-6">
-              Kuasai <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-science-purple">Stoikiometri</span> <br className="hidden md:block"/> Tanpa Rasa Pusing.
+            <h1 className="text-5xl md:text-7xl font-display font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+              Taklukkan <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-science-purple">Stoikiometri</span> <br className="hidden md:block"/> Tanpa Menghafal Mati.
             </h1>
             
             <p className="mt-4 max-w-2xl mx-auto text-xl text-slate-500">
-              Belajar konsep mol, penyetaraan reaksi, dan perhitungan kimia dengan bantuan 
-              <span className="font-bold text-slate-700"> AI Tutor Interaktif</span>, simulasi laboratorium virtual, dan modul terstruktur.
+              Pahami konsep mol, penyetaraan reaksi, dan perhitungan kimia kompleks bersama 
+              <span className="font-bold text-slate-700"> Profesor Stoi (AI)</span>. Belajar jadi interaktif dengan simulasi lab virtual dan kuis adaptif.
             </p>
 
-            <div className="mt-10 flex justify-center gap-4">
+            <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
               <button 
                 onClick={onStart}
-                className="group bg-primary-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-200 hover:shadow-2xl hover:-translate-y-1 flex items-center gap-2"
+                className="group bg-primary-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-200 hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2"
               >
-                Mulai Belajar Sekarang
+                Mulai Belajar Gratis
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </button>
               <button 
                 onClick={onStart}
-                className="bg-white text-slate-700 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all border border-slate-200 flex items-center gap-2"
+                className="bg-white text-slate-700 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all border border-slate-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
               >
                 <Play size={20} className="fill-slate-700" />
-                Demo Lab
+                Coba Simulasi
               </button>
             </div>
           </motion.div>
@@ -101,21 +101,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                   </div>
 
                   <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="grid grid-cols-3 gap-8 p-12 w-full h-full mt-12">
-                             <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 flex flex-col items-center justify-center text-center group-hover:-translate-y-2 transition-transform duration-500">
-                                 <Atom size={48} className="text-blue-500 mb-4" />
-                                 <h3 className="font-bold text-blue-900">Visualisasi Atom</h3>
-                                 <p className="text-sm text-blue-700 mt-2">Lihat struktur atom Bohr secara interaktif.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 md:p-12 w-full h-full mt-8 md:mt-12 items-center">
+                             
+                             {/* Feature 1 */}
+                             <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 flex flex-col items-center justify-center text-center group-hover:-translate-y-2 transition-transform duration-500 shadow-sm">
+                                 <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                                    <Atom size={28} />
+                                 </div>
+                                 <h3 className="font-bold text-blue-900 text-lg">Konsep Mol Visual</h3>
+                                 <p className="text-sm text-blue-700 mt-2">Pahami hubungan partikel, massa, dan volume dengan mudah.</p>
                              </div>
-                             <div className="bg-purple-50 rounded-2xl p-6 border border-purple-100 flex flex-col items-center justify-center text-center scale-110 shadow-lg z-10">
-                                 <Bot size={56} className="text-purple-600 mb-4" />
-                                 <h3 className="font-bold text-purple-900">Profesor Stoi AI</h3>
-                                 <p className="text-sm text-purple-700 mt-2">Tanya jawab 24/7 dengan penjelasan personal.</p>
+
+                             {/* Feature 2 (Center Highlight) */}
+                             <div className="bg-purple-50 rounded-2xl p-8 border border-purple-100 flex flex-col items-center justify-center text-center scale-105 md:scale-110 shadow-xl z-10 relative overflow-hidden">
+                                 <div className="absolute top-0 right-0 p-2 opacity-10">
+                                     <Sparkles size={100} />
+                                 </div>
+                                 <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                                    <Bot size={40} />
+                                 </div>
+                                 <h3 className="font-bold text-purple-900 text-xl">Tanya Prof. Stoi</h3>
+                                 <p className="text-sm text-purple-700 mt-2 font-medium">
+                                     "Kenapa jawaban saya salah?" <br/>
+                                     <span className="font-normal opacity-80">AI mendiagnosis letak kesalahanmu secara spesifik.</span>
+                                 </p>
                              </div>
-                             <div className="bg-green-50 rounded-2xl p-6 border border-green-100 flex flex-col items-center justify-center text-center group-hover:-translate-y-2 transition-transform duration-500 delay-75">
-                                 <FlaskConical size={48} className="text-green-500 mb-4" />
-                                 <h3 className="font-bold text-green-900">Lab Virtual</h3>
-                                 <p className="text-sm text-green-700 mt-2">Campurkan larutan tanpa takut meledak.</p>
+
+                             {/* Feature 3 */}
+                             <div className="bg-green-50 rounded-2xl p-6 border border-green-100 flex flex-col items-center justify-center text-center group-hover:-translate-y-2 transition-transform duration-500 delay-75 shadow-sm">
+                                 <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                                     <FlaskConical size={28} />
+                                 </div>
+                                 <h3 className="font-bold text-green-900 text-lg">Lab Virtual Aman</h3>
+                                 <p className="text-sm text-green-700 mt-2">Campurkan larutan dan amati endapan tanpa risiko bahan kimia.</p>
                              </div>
                         </div>
                   </div>
@@ -128,46 +146,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-                <h2 className="text-3xl font-bold text-slate-900">Fitur Unggulan</h2>
-                <p className="text-slate-500 mt-2">Semua yang kamu butuhkan untuk nilai 100 di Kimia.</p>
+                <h2 className="text-3xl font-bold text-slate-900">Kenapa StoiMaster?</h2>
+                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">Kami mengombinasikan kurikulum terstruktur dengan teknologi AI untuk membuat kimia terasa masuk akal.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <FeatureCard 
                     icon={<BrainCircuit className="text-white" />}
                     color="bg-indigo-500"
-                    title="Jalur Belajar Adaptif"
-                    description="Mulai dari konsep dasar hingga soal kompleks. Sistem kami menyesuaikan dengan kecepatan belajarmu."
+                    title="Alur Belajar Adaptif"
+                    description="Materi disusun bertingkat. Mulai dari konsep dasar atom hingga perhitungan hasil reaksi yang kompleks."
                 />
                 <FeatureCard 
                     icon={<Sparkles className="text-white" />}
                     color="bg-purple-500"
-                    title="Bantuan AI Context-Aware"
-                    description="Bingung saat membaca materi? Blok teksnya dan tanya Prof. Stoi langsung di tempat."
+                    title="Bantuan Kontekstual"
+                    description="Bingung dengan satu paragraf materi? Blok teksnya dan minta AI menjelaskannya dengan analogi sederhana."
                 />
                  <FeatureCard 
                     icon={<FlaskConical className="text-white" />}
                     color="bg-teal-500"
-                    title="Simulasi Interaktif"
-                    description="Lakukan percobaan penyetaraan reaksi dan titrasi virtual untuk memahami konsep abstrak."
+                    title="Penyetaraan Reaksi"
+                    description="Visualisasikan atom di kiri dan kanan panah reaksi untuk memahami Hukum Kekekalan Massa secara intuitif."
                 />
                  <FeatureCard 
                     icon={<GraduationCap className="text-white" />}
                     color="bg-pink-500"
-                    title="Asesmen Pintar"
-                    description="Kuis dengan analisis kesalahan mendalam. Bukan sekedar tahu salah, tapi tahu kenapa salah."
+                    title="Diagnostik Kesalahan"
+                    description="Saat salah menjawab kuis, AI tidak hanya memberi kunci jawaban, tapi menjelaskan letak kekeliruan logikamu."
                 />
                  <FeatureCard 
-                    icon={<Atom className="text-white" />}
+                    icon={<Calculator className="text-white" />}
                     color="bg-blue-500"
-                    title="Kalkulator Stoikiometri"
-                    description="Alat bantu hitung konversi mol, massa, dan partikel yang akurat dan mudah digunakan."
+                    title="Kalkulator Kimia"
+                    description="Alat bantu hitung Mr, konversi mol-gram-volume, dan partikel tanpa perlu menghafal rumus manual."
                 />
                  <FeatureCard 
-                    icon={<ChevronRight className="text-white" />}
+                    icon={<ScrollText className="text-white" />}
                     color="bg-slate-800"
-                    title="Mode Bebas & Terarah"
-                    description="Pilih ikuti kurikulum terstruktur atau eksplorasi materi sesuka hatimu."
+                    title="Bank Soal Lengkap"
+                    description="Ribuan variasi soal latihan, dari tipe hafalan, hitungan, hingga soal cerita (HOTS) yang menantang."
                 />
             </div>
         </div>
@@ -180,15 +198,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white">
                     <FlaskConical size={18} className="fill-current" />
                 </div>
-                <span className="text-xl font-bold text-white">StoiMaster</span>
+                <div>
+                    <span className="text-xl font-bold text-white block leading-none">StoiMaster</span>
+                    <span className="text-[10px] uppercase tracking-widest text-slate-500">Chemistry Learning</span>
+                </div>
             </div>
-            <div className="text-sm">
-                © 2025 StoiMaster Learning Platform. All rights reserved.
-            </div>
-            <div className="flex gap-6">
-                <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                <a href="#" className="hover:text-white transition-colors">Terms</a>
-                <a href="#" className="hover:text-white transition-colors">Contact</a>
+            <div className="text-sm text-center md:text-right">
+                <p>© 2025 StoiMaster Learning Platform.</p>
+                <p className="mt-1 text-slate-600">Dibuat dengan ❤️ untuk siswa Indonesia.</p>
             </div>
         </div>
       </footer>
@@ -202,7 +219,7 @@ const FeatureCard = ({ icon, color, title, description }: { icon: any, color: st
             {icon}
         </div>
         <h3 className="text-xl font-bold text-slate-900 mb-2">{title}</h3>
-        <p className="text-slate-500 leading-relaxed">
+        <p className="text-slate-500 leading-relaxed text-sm">
             {description}
         </p>
     </div>

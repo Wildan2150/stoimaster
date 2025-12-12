@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ModuleContent, UserProgress, LearningMode } from '../types';
 import { LEARNING_MODULES } from '../constants';
-import { BookOpen, ChevronRight, ArrowLeft, ArrowRight, Lock, CheckCircle, Star, GraduationCap, Unlock, Sparkles, X, MessageSquare, Loader2 } from 'lucide-react';
+import { BookOpen, ChevronRight, ArrowLeft, ArrowRight, Lock, CheckCircle, Star, GraduationCap, Unlock, Sparkles, X, MessageSquare, Loader2, Search } from 'lucide-react';
 import katex from 'katex';
 import { getContextualExplanation } from '../services/geminiService';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ interface ModuleViewerProps {
     learningMode?: LearningMode;
     targetModuleId?: string | null;
     onClearTargetModule?: () => void;
+    searchQuery?: string;
 }
 
 // Wrapper for contextual AI help (Hover/Click blocks)
@@ -59,7 +60,8 @@ export const ModuleViewer: React.FC<ModuleViewerProps> = ({
     onTakeQuiz, 
     learningMode = 'TIMELINE',
     targetModuleId,
-    onClearTargetModule
+    onClearTargetModule,
+    searchQuery = ''
 }) => {
   const [activeModule, setActiveModule] = useState<ModuleContent | null>(null);
 
@@ -84,6 +86,21 @@ export const ModuleViewer: React.FC<ModuleViewerProps> = ({
         if (onClearTargetModule) onClearTargetModule();
     }
   }, [targetModuleId, onClearTargetModule]);
+
+  // Effect to reset active module if search query changes
+  useEffect(() => {
+    if (searchQuery) {
+        setActiveModule(null);
+    }
+  }, [searchQuery]);
+
+  // Filter Logic
+  const filteredModules = searchQuery
+    ? LEARNING_MODULES.filter(m => 
+        m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        m.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : LEARNING_MODULES;
 
   // Handle Text Selection
   useEffect(() => {
@@ -627,11 +644,16 @@ export const ModuleViewer: React.FC<ModuleViewerProps> = ({
                     transition={{ delay: 0.1 }}
                     className="mb-8 text-center"
                 >
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">Peta Perjalanan Belajar</h1>
+                    <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                        {searchQuery ? `Hasil Pencarian: "${searchQuery}"` : 'Peta Perjalanan Belajar'}
+                    </h1>
                     <p className="text-slate-500 dark:text-slate-400">
-                        {learningMode === 'TIMELINE' 
-                            ? 'Selesaikan setiap modul untuk membuka tantangan berikutnya.' 
-                            : 'Mode Bebas Aktif: Jelajahi materi sesuka hatimu.'}
+                        {searchQuery
+                           ? `Ditemukan ${filteredModules.length} materi yang cocok.`
+                           : (learningMode === 'TIMELINE' 
+                                ? 'Selesaikan setiap modul untuk membuka tantangan berikutnya.' 
+                                : 'Mode Bebas Aktif: Jelajahi materi sesuka hatimu.')
+                        }
                     </p>
                 </motion.div>
 
@@ -641,81 +663,101 @@ export const ModuleViewer: React.FC<ModuleViewerProps> = ({
                     animate="show"
                     className="space-y-4 relative"
                 >
-                    {/* Connecting Line (Absolute) */}
-                    <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-700 z-0 hidden md:block"></div>
+                    {/* Connecting Line (Absolute) - Hide when searching or showing subset */}
+                    {!searchQuery && (
+                        <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-700 z-0 hidden md:block"></div>
+                    )}
 
-                    {LEARNING_MODULES.map((module, index) => {
-                        const status = getModuleStatus(module.id);
-                        const isLocked = status === 'LOCKED';
-                        const isCompleted = status === 'COMPLETED';
-                        const score = userProgress ? userProgress[module.id]?.score : 0;
+                    {filteredModules.length > 0 ? (
+                        filteredModules.map((module) => {
+                            const status = getModuleStatus(module.id);
+                            const isLocked = status === 'LOCKED';
+                            const isCompleted = status === 'COMPLETED';
+                            const score = userProgress ? userProgress[module.id]?.score : 0;
 
-                        return (
-                            <motion.div key={module.id} variants={itemVariants} className={`relative pl-0 md:pl-16 transition-all duration-500 ${isLocked ? 'opacity-70 grayscale' : 'opacity-100'}`}>
-                                {/* Timeline Node (Desktop) */}
-                                <div className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-4 border-white dark:border-slate-800 z-10 shadow-sm hidden md:block ${
-                                    isCompleted ? 'bg-green-500' : isLocked ? 'bg-slate-300 dark:bg-slate-600' : 'bg-primary-500'
-                                }`}></div>
+                            return (
+                                <motion.div key={module.id} variants={itemVariants} className={`relative pl-0 md:pl-16 transition-all duration-500 ${isLocked ? 'opacity-70 grayscale' : 'opacity-100'}`}>
+                                    {/* Timeline Node (Desktop) - Hide line connection styles when searching */}
+                                    {!searchQuery && (
+                                        <div className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-4 border-white dark:border-slate-800 z-10 shadow-sm hidden md:block ${
+                                            isCompleted ? 'bg-green-500' : isLocked ? 'bg-slate-300 dark:bg-slate-600' : 'bg-primary-500'
+                                        }`}></div>
+                                    )}
 
-                                <button
-                                    onClick={() => !isLocked && setActiveModule(module)}
-                                    disabled={isLocked}
-                                    className={`w-full group relative flex flex-col md:flex-row items-start md:items-center p-5 rounded-2xl border text-left transition-all duration-300 ease-out ${
-                                        isLocked 
-                                        ? 'bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 cursor-not-allowed' 
-                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-primary-300 dark:hover:border-primary-600 hover:-translate-y-1'
-                                    }`}
-                                >
-                                    {/* Left Icon */}
-                                    <div className={`p-4 rounded-xl shrink-0 mr-4 mb-4 md:mb-0 ${
-                                        isLocked ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500' : 
-                                        isCompleted ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                                        'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                                    }`}>
-                                        {isLocked ? <Lock size={24} /> : isCompleted ? <CheckCircle size={24} /> : (learningMode === 'FREE' ? <Unlock size={24} /> : <BookOpen size={24} />)}
-                                    </div>
-                                    
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                                                module.difficulty === 'Easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
-                                                module.difficulty === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
-                                                'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                            }`}>
-                                                {module.difficulty}
-                                            </span>
-                                            {isCompleted && (
-                                                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
-                                                    <Star size={10} fill="currentColor" /> Skor: {score}
+                                    <button
+                                        onClick={() => !isLocked && setActiveModule(module)}
+                                        disabled={isLocked}
+                                        className={`w-full group relative flex flex-col md:flex-row items-start md:items-center p-5 rounded-2xl border text-left transition-all duration-300 ease-out ${
+                                            isLocked 
+                                            ? 'bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 cursor-not-allowed' 
+                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-primary-300 dark:hover:border-primary-600 hover:-translate-y-1'
+                                        }`}
+                                    >
+                                        {/* Left Icon */}
+                                        <div className={`p-4 rounded-xl shrink-0 mr-4 mb-4 md:mb-0 ${
+                                            isLocked ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500' : 
+                                            isCompleted ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                                            'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                                        }`}>
+                                            {isLocked ? <Lock size={24} /> : isCompleted ? <CheckCircle size={24} /> : (learningMode === 'FREE' ? <Unlock size={24} /> : <BookOpen size={24} />)}
+                                        </div>
+                                        
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                                                    module.difficulty === 'Easy' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                                                    module.difficulty === 'Medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+                                                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                }`}>
+                                                    {module.difficulty}
                                                 </span>
-                                            )}
-                                            {learningMode === 'FREE' && !isCompleted && (
-                                                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
-                                                    Unlocked
+                                                {isCompleted && (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+                                                        <Star size={10} fill="currentColor" /> Skor: {score}
+                                                    </span>
+                                                )}
+                                                {learningMode === 'FREE' && !isCompleted && (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
+                                                        Unlocked
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <h3 className={`text-lg font-bold mb-1 ${isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100 group-hover:text-primary-700 dark:group-hover:text-primary-300'}`}>
+                                                {module.title}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                                                {module.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Right Action */}
+                                        <div className="mt-4 md:mt-0 md:ml-4 flex items-center">
+                                            {!isLocked && (
+                                                <span className="p-2 rounded-full bg-slate-50 dark:bg-slate-700 text-slate-400 dark:text-slate-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                    <ChevronRight size={20} />
                                                 </span>
                                             )}
                                         </div>
-
-                                        <h3 className={`text-lg font-bold mb-1 ${isLocked ? 'text-slate-500 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100 group-hover:text-primary-700 dark:group-hover:text-primary-300'}`}>
-                                            {module.title}
-                                        </h3>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                                            {module.description}
-                                        </p>
-                                    </div>
-
-                                    {/* Right Action */}
-                                    <div className="mt-4 md:mt-0 md:ml-4 flex items-center">
-                                        {!isLocked && (
-                                            <span className="p-2 rounded-full bg-slate-50 dark:bg-slate-700 text-slate-400 dark:text-slate-400 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/30 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                                <ChevronRight size={20} />
-                                            </span>
-                                        )}
-                                    </div>
-                                </button>
-                            </motion.div>
-                        );
-                    })}
+                                    </button>
+                                </motion.div>
+                            );
+                        })
+                    ) : (
+                         <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-col items-center justify-center py-16 text-center"
+                         >
+                             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                                 <Search size={32} className="text-slate-400" />
+                             </div>
+                             <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Materi Tidak Ditemukan</h3>
+                             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-xs">
+                                 Coba gunakan kata kunci yang lebih umum seperti "Mol", "Gas", atau "Reaksi".
+                             </p>
+                         </motion.div>
+                    )}
                 </motion.div>
             </div>
         </motion.div>
